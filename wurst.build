@@ -1,0 +1,4 @@
+---
+projectName: "LuaEngineUtils"
+dependencies:
+- "https://github.com/wurstscript/wurstStdlib2"

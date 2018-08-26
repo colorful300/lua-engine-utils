@@ -1,0 +1,161 @@
+package Sync
+
+import _DummyGenerate
+
+hashtable table=InitHashtable()
+
+constant int pointReceiverTypeId='xpts'
+constant int immediateReceiverTypeId='xits'
+constant int unitSenderTypeId='xour'
+constant int idSenderTypeId='xoir'
+constant int dummyTypeId='xsyn'
+constant int dummyPlayer=15
+
+trigger pointTrigger
+trigger immediateTrigger
+unit orderUnitSender
+unit orderIdSender
+
+interface IntCallback
+    function run(int x, int y)
+
+interface RealCallback
+    function run(real x, real y)
+
+interface VoidCallback
+    function run()
+
+public class SyncIntDummy
+    unit object
+    IntCallback callback=null
+    trigger trig
+    /** 需要在同步的条件下调用此构造函数
+        不建议同步绝对值过大的整数：因为是用实数模拟的，可能会出现精度问题。如有需求可以按位多次同步 */
+    construct(int owner)
+        object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
+        trig=CreateTrigger()
+        ..registerUnitEvent(object, EVENT_UNIT_ISSUED_POINT_ORDER)
+        ..addCondition(Condition(()->begin
+            if(GetIssuedOrderId()==851990)
+                thistype syncDummy=table.loadInt(GetTriggeringTrigger().getHandleId(), 0) castTo thistype
+                syncDummy.object.issueImmediateOrderById(851972)
+                real adjustedX=GetOrderPointX()
+                real adjustedY=GetOrderPointY()
+                if(adjustedX>=0.0)
+                    adjustedX+=0.5
+                else
+                    adjustedX-=0.5
+                if(adjustedY>=0.0)
+                    adjustedY+=0.5
+                else
+                    adjustedY-=0.5
+                syncDummy.callback.run(adjustedX.toInt(), adjustedY.toInt())
+        end))
+        table.saveInt(trig.getHandleId(), 0, this castTo int)
+    ondestroy
+        object.remove()
+        if(callback!=null)
+            destroy callback
+        trig.destr()
+    /** 通常在异步条件下调用此函数 */
+    function sync(unit select,int x,int y,IntCallback callback)
+        this.callback=callback
+        ClearSelection()
+        SelectUnit(object, true)
+        object..setX(x.toReal())..setY(y.toReal())
+        orderUnitSender.setUserData(object.getHandleId())
+        orderIdSender.setUserData(851990)
+        pointTrigger.evaluate()
+        ClearSelection()
+        SelectUnit(select, true)
+
+public class SyncRealDummy
+    unit object
+    RealCallback callback=null
+    trigger trig
+    /** 需要在同步的条件下调用此构造函数 */
+    construct(int owner)
+        object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
+        trig=CreateTrigger()
+        ..registerUnitEvent(object, EVENT_UNIT_ISSUED_POINT_ORDER)
+        ..addCondition(Condition(()->begin
+            if(GetIssuedOrderId()==851990)
+                thistype syncDummy=table.loadInt(GetTriggeringTrigger().getHandleId(), 0) castTo thistype
+                syncDummy.object.issueImmediateOrderById(851972)
+                syncDummy.callback.run(GetOrderPointX(), GetOrderPointY())
+        end))
+        table.saveInt(trig.getHandleId(), 0, this castTo int)
+    ondestroy
+        object.remove()
+        if(callback!=null)
+            destroy callback
+        trig.destr()
+    /** 通常在异步条件下调用此函数 */
+    function sync(unit select,real x,real y,RealCallback callback)
+        this.callback=callback
+        ClearSelection()
+        SelectUnit(object, true)
+        object..setX(x)..setY(y)
+        orderUnitSender.setUserData(object.getHandleId())
+        orderIdSender.setUserData(851990)
+        pointTrigger.evaluate()
+        ClearSelection()
+        SelectUnit(select, true)
+
+public class SyncEventDummy
+    unit object
+    VoidCallback callback=null
+    trigger trig
+    /** 需要在同步的条件下调用此构造函数 */
+    construct(int owner)
+        object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
+        trig=CreateTrigger()
+        ..registerUnitEvent(object, EVENT_UNIT_ISSUED_ORDER)
+        ..addCondition(Condition(()->begin
+            if(GetIssuedOrderId()==851993)
+                thistype syncDummy=table.loadInt(GetTriggeringTrigger().getHandleId(), 0) castTo thistype
+                syncDummy.object.issueImmediateOrderById(851972)
+                syncDummy.callback.run()
+        end))
+        table.saveInt(trig.getHandleId(), 0, this castTo int)
+    ondestroy
+        object.remove()
+        if(callback!=null)
+            destroy callback
+        trig.destr()
+    /** 通常在异步条件下调用此函数 */
+    function sync(unit select,VoidCallback callback)
+        this.callback=callback
+        ClearSelection()
+        SelectUnit(object, true)
+        orderUnitSender.setUserData(object.getHandleId())
+        orderIdSender.setUserData(851993)
+        immediateTrigger.evaluate()
+        ClearSelection()
+        SelectUnit(select, true)
+
+@compiletime function generateDummyUnits()
+    dummyGenerator(dummyTypeId)..setName("orderer dummy")
+    dummyGenerator(pointReceiverTypeId)..setName("point sync channel")
+    dummyGenerator(immediateReceiverTypeId)..setName("event sync channel")
+    dummyGenerator(unitSenderTypeId)..setName("sync unit channel")
+    dummyGenerator(idSenderTypeId)..setName("sync id channel")
+
+
+init
+    Cheat("exec-lua:\"sync\"")
+    CreateTimer()
+    ..start(0.0)->
+        GetExpiredTimer().destr()
+        group g=CreateGroup()
+        GroupEnumUnitsOfPlayer(g, Player(dummyPlayer), null)
+        for u from g
+            switch u.getTypeId()
+                case pointReceiverTypeId
+                    pointTrigger=triggerFromIndex(u.getUserData())
+                case immediateReceiverTypeId
+                    immediateTrigger=triggerFromIndex(u.getUserData())
+                case unitSenderTypeId
+                    orderUnitSender=u
+                case idSenderTypeId
+                    orderIdSender=u

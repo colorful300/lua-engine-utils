@@ -1,0 +1,65 @@
+package KeyboardEvent
+
+import _DummyGenerate
+
+trigger keyboardHookTrigger
+unit keyTypeReceiver
+unit keyCodeReceiver
+unit triggerSender
+
+trigger array eventTriggers
+int eventTriggerTop=-1
+constant int dummyTypeId='xkey'
+
+public constant int KEY_TYPE_DOWN=1
+public constant int KEY_TYPE_UP=2
+
+trigger currentTrigger
+
+public function getKeyType() returns int
+    return keyTypeReceiver.getUserData()
+
+/** Left=516,Up=517,Right=518,Down=519
+    A-Z=65-90
+    Space=32
+    F1-F12=768-775
+    Esc=512 
+*/
+public function getKeyCode() returns int
+    return keyCodeReceiver.getUserData()
+
+public function getCurrentTrigger() returns trigger
+    return currentTrigger
+
+public function trigger.registerKeyboardEvent()
+    eventTriggerTop++
+    eventTriggers[eventTriggerTop]=this
+
+@compiletime function generateDummyUnits()
+    dummyGenerator(dummyTypeId)..setName("keyboard channel dummy")
+
+init
+    Cheat("exec-lua:\"keyboard_hook\"")
+    keyboardHookTrigger=CreateTrigger()
+    ..addCondition(Condition(()->begin
+        for i=0 to eventTriggerTop
+            currentTrigger=eventTriggers[i]
+            currentTrigger.evaluate()
+        return false
+    end))
+    CreateTimer()
+    ..start(0.0)->
+        GetExpiredTimer().destr()
+        group g=CreateGroup()
+        GroupEnumUnitsOfPlayer(g, playerFromIndex(15), null)
+        for u from g
+            if(u.getTypeId()==dummyTypeId)
+                switch u.getUserData()
+                    case 1954115685
+                        keyTypeReceiver=u
+                    case 1668244581
+                        keyCodeReceiver=u
+                    case 1953655143
+                        triggerSender=u
+                        triggerSender.setUserData(keyboardHookTrigger.getHandleId())
+        g.destr()
