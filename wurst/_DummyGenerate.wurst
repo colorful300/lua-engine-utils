@@ -30,3 +30,4 @@ public function dummyGenerator(int dummyUnitTypeId) returns UnitDefinition
     ..setPropulsionWindowdegrees(1.0)
     ..setTooltipBasic("")
     ..setNormalAbilities("")
+    ..setSelectionScale(-1.0)
