@@ -27,12 +27,13 @@ interface VoidCallback
 
 public class SyncIntDummy
     unit object
-    IntCallback callback=null
+    IntCallback callback
     trigger trig
     /** 需要在同步的条件下调用此构造函数
         不建议同步绝对值过大的整数：因为是用实数模拟的，可能会出现精度问题。如有需求可以按位多次同步 */
-    construct(int owner)
+    construct(int owner, IntCallback callback)
         object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
+        this.callback=callback
         trig=CreateTrigger()
         ..registerUnitEvent(object, EVENT_UNIT_ISSUED_POINT_ORDER)
         ..addCondition(Condition(()->begin
@@ -54,12 +55,10 @@ public class SyncIntDummy
         table.saveInt(trig.getHandleId(), 0, this castTo int)
     ondestroy
         object.remove()
-        if(callback!=null)
-            destroy callback
+        destroy callback
         trig.destr()
     /** 通常在异步条件下调用此函数 */
-    function sync(unit select,int x,int y,IntCallback callback)
-        this.callback=callback
+    function sync(unit select,int x,int y)
         ClearSelection()
         SelectUnit(object, true)
         object..setX(x.toReal())..setY(y.toReal())
@@ -74,8 +73,9 @@ public class SyncRealDummy
     RealCallback callback=null
     trigger trig
     /** 需要在同步的条件下调用此构造函数 */
-    construct(int owner)
+    construct(int owner, RealCallback callback)
         object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
+        this.callback=callback
         trig=CreateTrigger()
         ..registerUnitEvent(object, EVENT_UNIT_ISSUED_POINT_ORDER)
         ..addCondition(Condition(()->begin
@@ -87,12 +87,10 @@ public class SyncRealDummy
         table.saveInt(trig.getHandleId(), 0, this castTo int)
     ondestroy
         object.remove()
-        if(callback!=null)
-            destroy callback
+        destroy callback
         trig.destr()
     /** 通常在异步条件下调用此函数 */
-    function sync(unit select,real x,real y,RealCallback callback)
-        this.callback=callback
+    function sync(unit select,real x,real y)
         ClearSelection()
         SelectUnit(object, true)
         object..setX(x)..setY(y)
@@ -107,8 +105,9 @@ public class SyncEventDummy
     VoidCallback callback=null
     trigger trig
     /** 需要在同步的条件下调用此构造函数 */
-    construct(int owner)
+    construct(int owner, VoidCallback callback)
         object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
+        this.callback=callback
         trig=CreateTrigger()
         ..registerUnitEvent(object, EVENT_UNIT_ISSUED_ORDER)
         ..addCondition(Condition(()->begin
@@ -120,12 +119,10 @@ public class SyncEventDummy
         table.saveInt(trig.getHandleId(), 0, this castTo int)
     ondestroy
         object.remove()
-        if(callback!=null)
-            destroy callback
+        destroy callback
         trig.destr()
     /** 通常在异步条件下调用此函数 */
-    function sync(unit select,VoidCallback callback)
-        this.callback=callback
+    function sync(unit select)
         ClearSelection()
         SelectUnit(object, true)
         orderUnitSender.setUserData(object.getHandleId())
