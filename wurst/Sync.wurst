@@ -29,7 +29,7 @@ public class SyncIntDummy
     unit object
     IntCallback callback
     trigger trig
-    /** 需要在同步的条件下调用此构造函数
+    /** 通常在同步的条件下调用此构造函数
         不建议同步绝对值过大的整数：因为是用实数模拟的，可能会出现精度问题。如有需求可以按位多次同步 */
     construct(int owner, IntCallback callback)
         object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
@@ -72,7 +72,7 @@ public class SyncRealDummy
     unit object
     RealCallback callback=null
     trigger trig
-    /** 需要在同步的条件下调用此构造函数 */
+    /** 通常在同步的条件下调用此构造函数 */
     construct(int owner, RealCallback callback)
         object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
         this.callback=callback
@@ -104,7 +104,7 @@ public class SyncEventDummy
     unit object
     VoidCallback callback=null
     trigger trig
-    /** 需要在同步的条件下调用此构造函数 */
+    /** 通常在同步的条件下调用此构造函数 */
     construct(int owner, VoidCallback callback)
         object=CreateUnit(playerFromIndex(owner), dummyTypeId, 0.0, 0.0, 0.0)
         this.callback=callback
