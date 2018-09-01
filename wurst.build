@@ -1,4 +1,4 @@
 ---
-projectName: "LuaEngineUtils"
+projectName: "Wheel"
 dependencies:
 - "https://github.com/wurstscript/wurstStdlib2"
