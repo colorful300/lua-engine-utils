@@ -1,3 +1,6 @@
 _build
 wurst.dependencies
 .vscode
+test.w3x
+war3map.j
+test/
