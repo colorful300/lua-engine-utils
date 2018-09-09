@@ -1,0 +1,90 @@
+package Message
+
+import _DummyGenerate
+
+trigger messageHookTrigger
+trigger mouseTrigger
+unit msgTypeReceiver
+unit msgCodeReceiver
+unit triggerSender
+unit mouseDataReceiver
+unit mouseTriggerReceiver
+
+trigger array eventTriggers
+int eventTriggerTop=-1
+constant int dummyTypeId='xmsg'
+constant int mouseDummyTypeId='xmse'
+
+public constant int MSG_TYPE_DOWN=1
+public constant int MSG_TYPE_UP=2
+public constant int MSG_TYPE_MOUSE_DOWN=3
+public constant int MSG_TYPE_MOUSE_UP=4
+
+trigger currentTrigger
+
+public function getMousePos() returns vec2
+    mouseTrigger.evaluate()
+    return vec2(mouseDataReceiver.getX(), mouseDataReceiver.getY())
+    
+public function getMouseX() returns real
+    mouseTrigger.evaluate()
+    return mouseDataReceiver.getX()
+
+public function getMouseY() returns real
+    mouseTrigger.evaluate()
+    return mouseDataReceiver.getY()
+
+public function getEventMessageType() returns int
+    return msgTypeReceiver.getUserData()
+
+/** Left=516,Up=517,Right=518,Down=519
+    A-Z=65-90
+    Space=32
+    F1-F12=768-775
+    Esc=512
+*/
+public function getEventMessageCode() returns int
+    return msgCodeReceiver.getUserData()
+
+public function getCurrentTrigger() returns trigger
+    return currentTrigger
+
+public function trigger.registerMessageEvent()
+    eventTriggerTop++
+    eventTriggers[eventTriggerTop]=this
+
+@compiletime function generateDummyUnits()
+    dummyGenerator(dummyTypeId)..setName("message channel dummy")
+    dummyGenerator(mouseDummyTypeId)..setName("mouse data dummy")
+
+init
+    Cheat("exec-lua:\"message\"")
+    messageHookTrigger=CreateTrigger()
+    ..addCondition(Condition(()->begin
+        for i=0 to eventTriggerTop
+            currentTrigger=eventTriggers[i]
+            currentTrigger.evaluate()
+        return false
+    end))
+    CreateTimer()
+    ..start(0.0)->
+        GetExpiredTimer().destr()
+        group g=CreateGroup()
+        GroupEnumUnitsOfPlayer(g, playerFromIndex(15), null)
+        for u from g
+            if(u.getTypeId()==dummyTypeId)
+                switch u.getUserData()
+                    case 1954115685
+                        msgTypeReceiver=u
+                    case 1668244581
+                        msgCodeReceiver=u
+                    case 1953655143
+                        triggerSender=u
+                        triggerSender.setUserData(messageHookTrigger.getHandleId())
+                    case 2020437877
+                        mouseDataReceiver=u
+            else if(u.getTypeId()==mouseDummyTypeId)
+                mouseTriggerReceiver=u
+                mouseTrigger=triggerFromIndex(mouseTriggerReceiver.getUserData())
+                print(mouseTrigger.getHandleId())
+        g.destr()

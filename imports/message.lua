@@ -2,8 +2,10 @@
 local jass = require 'jass.common'
 local message = require 'jass.message'
 
-local dummyTypeId=2020304249
---xkey
+local dummyTypeId=2020438887
+--xmsg
+local mouseDummyTypeId=2020438885
+--xmse
 local dummyPlayer=15
 
 --typecast
@@ -29,15 +31,34 @@ jass.ShowUnit(keyCodeSender,false)
 local triggerReceiver=jass.CreateUnit(jass.Player(dummyPlayer),dummyTypeId,0.0,0.0,0.0)
 jass.SetUnitUserData(triggerReceiver, 1953655143)
 jass.ShowUnit(triggerReceiver,false)
+local mouseDataSender=jass.CreateUnit(jass.Player(dummyPlayer),dummyTypeId,0.0,0.0,0.0)
+jass.SetUnitUserData(mouseDataSender, 2020437877)
+jass.ShowUnit(mouseDataSender,false)
 local triggerHandle=0
 local trigger=nil
 
---keyboard hook
+--mouse
+local mouseTriggerSender=jass.CreateUnit(jass.Player(dummyPlayer),mouseDummyTypeId,0.0,0.0,0.0)
+jass.ShowUnit(mouseTriggerSender,false)
+local mouseTrigger=jass.CreateTrigger()
+jass.TriggerAddCondition(mouseTrigger, jass.Condition(function()
+    local x, y = message.mouse()
+    jass.SetUnitX(mouseDataSender, x)
+    jass.SetUnitY(mouseDataSender, y)
+    return false
+end))
+jass.SetUnitUserData(mouseTriggerSender, jass.GetHandleId(mouseTrigger))
+
+--message hook
 function message.hook(msg)
     if(msg.type=='key_down')then
         jass.SetUnitUserData(keyTypeSender,1)
     elseif(msg.type=='key_up')then
         jass.SetUnitUserData(keyTypeSender,2)
+    elseif(msg.type=='mouse_down')then
+        jass.SetUnitUserData(keyTypeSender,3)
+    elseif(msg.type=='mouse_up')then
+        jass.SetUnitUserData(keyTypeSender,4)
     else
         return true
     end
