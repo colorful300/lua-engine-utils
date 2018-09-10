@@ -1,4 +1,4 @@
-package LocalOrderSync
+package Sync
 
 import _DummyGenerate
 
